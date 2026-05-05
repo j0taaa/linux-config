@@ -1,1 +1,48 @@
 # linux-config
+
+Idempotent Linux workstation bootstrap for Ubuntu/Debian and CentOS/RHEL/Fedora-family systems.
+
+It installs and configures:
+
+- `zsh` as the default shell, with autocomplete, autosuggestions, syntax highlighting, and Starship prompt
+- `tmux`, Git, GitHub CLI, Docker Engine, Docker Compose plugin
+- Node.js 24, Bun, Codex CLI, OpenCode CLI
+- Useful aliases, including:
+
+```sh
+alias fixmouse="printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l\e[?1015l\e[?1005l'"
+```
+
+The script is safe to run more than once. Existing tools and plugin repositories are skipped, missing packages are installed, and shell/tmux config is written inside managed blocks that are replaced only when their contents change.
+
+## Run directly from this repository
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/j0taaa/linux-config/main/install.sh | bash -s -- --yes
+```
+
+## Run from a GitHub Gist
+
+After creating a gist that contains `install.sh`, use the raw gist URL:
+
+```sh
+curl -fsSL https://gist.githubusercontent.com/<user>/<gist-id>/raw/install.sh | bash -s -- --yes
+```
+
+## Local usage
+
+```sh
+bash install.sh --yes
+```
+
+Preview without changing the machine:
+
+```sh
+bash install.sh --dry-run
+```
+
+## Notes
+
+- Docker group membership requires logging out and back in before running Docker without `sudo`.
+- Changing the default shell may require the user password on some distributions.
+- `gh auth login` is intentionally not automated because it requires your GitHub authentication.
