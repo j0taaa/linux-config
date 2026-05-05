@@ -23,10 +23,10 @@ curl -fsSL https://raw.githubusercontent.com/j0taaa/linux-config/main/install.sh
 
 ## Run from a GitHub Gist
 
-After creating a gist that contains `install.sh`, use the raw gist URL:
+Use the raw gist URL:
 
 ```sh
-curl -fsSL https://gist.githubusercontent.com/<user>/<gist-id>/raw/install.sh | bash -s -- --yes
+curl -fsSL https://gist.githubusercontent.com/j0taaa/4a7b1373f5ecd3f3ee1e3ffc68e0c4e1/raw/install.sh | bash -s -- --yes
 ```
 
 ## Local usage
