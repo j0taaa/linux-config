@@ -8,6 +8,7 @@ readonly ZSH_PLUGIN_DIR="$ZSH_CUSTOM_DIR/plugins"
 readonly ZSHRC="$HOME/.zshrc"
 readonly BASHRC="$HOME/.bashrc"
 readonly TMUX_CONF="$HOME/.tmux.conf"
+readonly OPENCODE_BIN_DIR="$HOME/.opencode/bin"
 
 DRY_RUN=0
 
@@ -292,26 +293,29 @@ install_npm_tools() {
   log "Installing AI developer CLIs"
   local packages=()
   need_cmd codex || packages+=("@openai/codex")
-  need_cmd opencode || packages+=("opencode-ai")
 
   if ((${#packages[@]})); then
     sudo_cmd npm install -g "${packages[@]}"
   else
-    log "Codex and OpenCode already installed"
+    log "Codex already installed"
   fi
 }
 
-install_starship() {
-  if need_cmd starship; then
-    log "Starship prompt already installed"
+install_opencode() {
+  if [[ -x "$OPENCODE_BIN_DIR/opencode" ]]; then
+    log "OpenCode already installed in $OPENCODE_BIN_DIR"
     return
   fi
 
-  log "Installing Starship prompt"
+  log "Installing OpenCode"
   if ((DRY_RUN)); then
-    printf '[dry-run] run Starship installer\n'
+    printf '[dry-run] remove old global npm OpenCode package if present\n'
+    printf '[dry-run] run OpenCode installer without modifying shell files\n'
   else
-    curl -fsSL https://starship.rs/install.sh | sh -s -- -y
+    if need_cmd npm && npm list -g opencode-ai --depth=0 >/dev/null 2>&1; then
+      sudo_cmd npm uninstall -g opencode-ai || warn "could not remove old global npm OpenCode package"
+    fi
+    curl -fsSL https://opencode.ai/install | PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" bash -s -- --no-modify-path
   fi
 }
 
@@ -379,7 +383,10 @@ configure_shell() {
 export EDITOR="${EDITOR:-nano}"
 export VISUAL="$EDITOR"
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$BUN_INSTALL/bin:$HOME/.local/bin:$PATH"
+
+autoload -Uz colors 2>/dev/null && colors
+PROMPT='%F{cyan}%n@%m%f:%F{yellow}%~%f %# '
 
 alias ll="ls -alF"
 alias la="ls -A"
@@ -405,10 +412,6 @@ linux-config-update() {
   fi
 }
 
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh 2>/dev/null || starship init bash)"
-fi
-
 if [[ -f "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
   source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
@@ -431,7 +434,8 @@ EOF
   local bash_block
   bash_block=$(cat <<'EOF'
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$BUN_INSTALL/bin:$HOME/.local/bin:$PATH"
+PS1='\u@\h:\w \$ '
 alias ll="ls -alF"
 alias gs="git status --short --branch"
 alias d="docker"
@@ -439,9 +443,6 @@ alias dc="docker compose"
 alias t="tmux new -A -s main"
 alias fixmouse="printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l\e[?1015l\e[?1005l'"
 
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init bash)"
-fi
 EOF
 )
 
@@ -506,7 +507,7 @@ main() {
   install_node
   install_bun
   install_npm_tools
-  install_starship
+  install_opencode
   install_zsh_plugins
   configure_shell
   set_default_shell
